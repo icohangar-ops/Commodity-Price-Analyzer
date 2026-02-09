@@ -1,0 +1,39 @@
+{
+  "apis": {
+    "brave_search": {
+      "api_key": "REDACTED",
+      "base_url": "https://api.search.brave.com/res/v1",
+      "rate_limit": 2000,
+      "priority": 1
+    },
+    "tavily": {
+      "api_key": "REDACTED",
+      "base_url": "https://api.tavily.com",
+      "rate_limit": 1000,
+      "priority": 2,
+      "fallback_for": "brave_search"
+    },
+    "hunter": {
+      "api_key": "REDACTED",
+      "base_url": "https://api.hunter.io/v2",
+      "rate_limit": 500
+    },
+    "zyte": {
+      "api_key": "REDACTED",
+      "base_url": "https://api.zyte.com/v1",
+      "rate_limit": 1000
+    },
+    "abstract": {
+      "api_key": "REDACTED",
+      "base_url": "https://companyenrichment.abstractapi.com/v1",
+      "rate_limit": 500,
+      "docs": "https://app.abstractapi.com/api/company-enrichment"
+    }
+  },
+  "web_access": {
+    "enabled": true,
+    "default_search": "brave_search",
+    "fallback_enabled": true,
+    "scraping_enabled": true
+  }
+}
