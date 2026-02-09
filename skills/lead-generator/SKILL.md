@@ -89,6 +89,7 @@ description: Lead generation specialist for fractional CFO services and business
 | **Hunter.io** | Email verification | 500/mo | - |
 | **Zyte** | Web scraping | 1,000/mo | - |
 | **Abstract** | Company enrichment | 500/mo | - |
+| **Crawl4AI** | AI-powered web crawling | 1,000/mo | Z AI LLM |
 
 ### Search Query Patterns
 ```python
@@ -136,6 +137,48 @@ results = enricher.bulk_enrich(["stripe.com", "notion.com", "linear.app"])
 - Confirm industry alignment (SaaS, healthcare, etc.)
 - Find LinkedIn URLs for exec team outreach
 - Prioritize leads by employee count/growth
+
+### AI-Powered Web Crawling (via Crawl4AI + Z AI)
+Advanced web crawling with LLM-based content extraction using Z AI (GLM-4.7):
+
+```python
+from crawl4ai_client import Crawl4AIClient, crawl_company_sync, find_cfo_vacancy
+import asyncio
+
+# Initialize crawler
+client = Crawl4AIClient()
+
+# Crawl company website with AI extraction
+result = await client.crawl_company_website("https://acme-tech.com")
+# Returns: company_name, industry, employee_count, funding_stage, executives, etc.
+
+# Find CFO job postings
+cfo_job = find_cfo_vacancy("https://acme-tech.com")
+if cfo_job:
+    print(f"CFO vacancy found: {cfo_job['title']}")
+
+# Crawl executive team page
+executives = await client.crawl_executive_team("https://acme-tech.com")
+for exec in executives:
+    print(f"{exec['name']} - {exec['title']}")
+
+# Crawl careers page for finance roles
+jobs = await client.crawl_job_postings("https://acme-tech.com")
+```
+
+**Crawl4AI capabilities:**
+- **AI Content Extraction**: Uses Z AI to intelligently extract structured data from messy HTML
+- **JavaScript Rendering**: Handles modern SPAs, React/Vue apps
+- **Content Filtering**: LLM filters out nav, ads, footers — keeps business content
+- **Schema Extraction**: Extract specific fields (company info, executives, job postings)
+- **Concurrent Crawling**: Crawl multiple pages in parallel
+
+**Use cases for CFO lead gen:**
+- Extract company intel from "About" pages
+- Find CFO/finance job postings on careers pages
+- Identify executive team and decision makers
+- Monitor recent news/announcements
+- Verify company size, funding stage, industry
 
 ### Research Commands
 ```bash

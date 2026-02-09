@@ -30,6 +30,16 @@
       "docs": "https://app.abstractapi.com/api/company-enrichment"
     }
   },
+  "crawl4ai": {
+    "enabled": true,
+    "llm_provider": "zai",
+    "llm_model": "glm-4.7",
+    "api_key": "REDACTED",
+    "browser_config": {
+      "headless": true,
+      "page_timeout": 30000
+    }
+  },
   "web_access": {
     "enabled": true,
     "default_search": "brave_search",
