@@ -29,12 +29,20 @@ class AzureAIConfig:
 
 @dataclass
 class FabricConfig:
-    """Microsoft Fabric configuration."""
+    """Microsoft Fabric configuration.
+
+    Auth modes:
+    - notebook: Inside Fabric notebooks. Spark authenticated automatically. NO Entra ID needed.
+    - rest: External REST API calls. Requires Service Principal (Entra ID).
+    - token: Direct Bearer token. Get from Fabric notebook, Azure CLI, or browser DevTools.
+    """
+    auth_mode: str = field(default_factory=lambda: os.getenv("FABRIC_AUTH_MODE", "notebook"))
     tenant_id: str = field(default_factory=lambda: os.getenv("FABRIC_TENANT_ID", ""))
     workspace_id: str = field(default_factory=lambda: os.getenv("FABRIC_WORKSPACE_ID", ""))
     lakehouse_id: str = field(default_factory=lambda: os.getenv("FABRIC_LAKEHOUSE_ID", ""))
     client_id: str = field(default_factory=lambda: os.getenv("FABRIC_CLIENT_ID", ""))
     client_secret: str = field(default_factory=lambda: os.getenv("FABRIC_CLIENT_SECRET", ""))
+    bearer_token: str = field(default_factory=lambda: os.getenv("FABRIC_BEARER_TOKEN", ""))
 
     @property
     def workspace_url(self) -> str:
@@ -44,14 +52,30 @@ class FabricConfig:
     def api_base(self) -> str:
         return "https://api.fabric.microsoft.com/v1"
 
-    def validate(self) -> bool:
-        required = [self.tenant_id, self.workspace_id, self.client_id]
-        if not all(required):
-            raise ValueError(
-                "Microsoft Fabric credentials incomplete. "
-                "Set FABRIC_TENANT_ID, FABRIC_WORKSPACE_ID, FABRIC_CLIENT_ID "
-                "in your .env file."
-            )
+    @property
+    def is_notebook_mode(self) -> bool:
+        return self.auth_mode == "notebook"
+
+    def validate_for_mode(self) -> bool:
+        """Validate credentials for the current auth mode."""
+        if self.auth_mode == "notebook":
+            if not self.workspace_id or not self.lakehouse_id:
+                raise ValueError(
+                    "Fabric notebook mode requires FABRIC_WORKSPACE_ID and FABRIC_LAKEHOUSE_ID."
+                )
+        elif self.auth_mode == "rest":
+            if not all([self.tenant_id, self.workspace_id, self.client_id]):
+                raise ValueError(
+                    "Fabric REST mode requires FABRIC_TENANT_ID, FABRIC_WORKSPACE_ID, "
+                    "and FABRIC_CLIENT_ID."
+                )
+        elif self.auth_mode == "token":
+            if not self.bearer_token:
+                raise ValueError(
+                    "Fabric token mode requires FABRIC_BEARER_TOKEN. "
+                    "Get one from: Fabric notebook (mssparkutils), Azure CLI (az login), "
+                    "or browser DevTools."
+                )
         return True
 
 
