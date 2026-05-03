@@ -83,6 +83,7 @@ class FabricConfig:
 class DataSourcesConfig:
     """External data source API keys."""
     alphavantage_key: str = field(default_factory=lambda: os.getenv("ALPHAVANTAGE_API_KEY", ""))
+    twelve_data_key: str = field(default_factory=lambda: os.getenv("TWELVE_DATA_API_KEY", ""))
     regulations_gov_key: str = field(default_factory=lambda: os.getenv("REGULATIONS_GOV_API_KEY", ""))
 
 
