@@ -40,3 +40,7 @@ data/processed/
 # Logs
 *.log
 logs/
+
+# CHP session artifacts (local only)
+.chp_registry.json
+.chp/sessions/
