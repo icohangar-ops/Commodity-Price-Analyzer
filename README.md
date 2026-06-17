@@ -4,9 +4,9 @@
 
 [![AI Model](https://img.shields.io/badge/AI-Kimi%20K2.6%20(Azure%20AI%20Foundry)-blue)](https://ai.azure.com)
 [![Data Platform](https://img.shields.io/badge/Platform-Microsoft%20Fabric-purple)](https://app.fabric.microsoft.com)
-[![Language](https://img.shields.io/badge/Python-3.12+-green)](https://python.org)
-[![Tests](https://img.shields.io/badge/Tests-15%20passed-brightgreen)](tests/)
-[![License](https://img.shields.io/badge/License-Proprietary-orange)](LICENSE)
+[![Core](https://img.shields.io/badge/Core-Rust%20(2021)-orange)](https://www.rust-lang.org)
+[![Notebooks](https://img.shields.io/badge/Notebooks-Python%203.12+-green)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
 ---
 
@@ -68,7 +68,7 @@ A single command or natural-language question triggers the full pipeline:
 | **Data Platform** | Microsoft Fabric — Lakehouse | Data storage (OneLake), Delta tables, historical analytics |
 | **BI/Visualization** | Fabric — Power BI | Real-time dashboards, KPI panels, trend charts |
 | **Data Ingestion** | Fabric — Data Factory | Scheduled pipelines, API connectors |
-| **Computation** | Python 3.12+ | Deterministic GLI business rules, unit conversions |
+| **Computation** | Rust (2021 edition) | Deterministic analytics core: forecasting, signals, seasonal, supply/demand, risk metrics |
 | **Market Data** | AlphaVantage API | Real-time Ni, Co, Li, Cu, Mn pricing |
 | **Regulatory Data** | Regulations.Gov API | Policy monitoring, trade regulation tracking |
 | **Authentication** | MSAL / Azure AD | Service principal auth for Fabric REST API |
@@ -94,40 +94,38 @@ The original Airia orchestration flow (`commodity_price_analyzer.json`) is prese
 
 ```
 Commodity-Price-Analyzer/
-├── src/
-│   ├── __init__.py              # Main pipeline orchestrator
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── settings.py          # Environment-based configuration
-│   ├── data/
-│   │   ├── __init__.py
-│   │   └── fetcher.py           # Commodity price data ingestion
-│   ├── contracts/
-│   │   ├── __init__.py
-│   │   └── business_rules.py    # GLI contract calculation engine
-│   ├── ai/
-│   │   ├── __init__.py
-│   │   └── analyzer.py          # Azure AI Foundry (Kimi K2.6) integration
-│   └── fabric/
-│       ├── __init__.py
-│       └── client.py            # Microsoft Fabric REST API client
+├── src/                          # Rust analytics crate (commodity-price-analyzer)
+│   ├── lib.rs                    # Crate root and public re-exports
+│   ├── types.rs                  # Core domain types
+│   ├── prices.rs                 # Price data management and resampling
+│   ├── forecast.rs               # Forecasting engine (regression, MA, ensemble)
+│   ├── signals.rs                # Technical indicators and trade signals
+│   ├── seasonal.rs               # Seasonal pattern analysis
+│   ├── supply_demand.rs          # Supply/demand modeling
+│   ├── risk.rs                   # Risk metrics (VaR, CVaR, drawdown)
+│   └── pipeline.rs               # Orchestrated analysis pipeline
 ├── notebooks/
 │   ├── fabric_setup_lakehouse.py    # Fabric notebook: Lakehouse table setup
-│   └── fabric_commodity_analyzer.py # Fabric notebook: Full analysis pipeline
+│   └── fabric_commodity_analyzer.py # Fabric notebook: full analysis pipeline
 ├── tests/
-│   ├── __init__.py
-│   └── test_business_rules.py   # 15 unit tests for GLI business rules
-├── .env                         # Environment variables (DO NOT commit real keys)
-├── .env.example                 # Template for environment variables
-├── .gitignore                   # Git ignore rules
-├── requirements.txt             # Python dependencies
-├── commodity_price_analyzer.json  # Original Airia flow (preserved)
-├── ARCHITECTURE.md              # Detailed architecture documentation
-├── CONTRACT_LOGIC.md            # Contract logic documentation
-├── DATA_SOURCES.md              # Data source documentation
-├── README.md                    # This file
-└── LICENSE                      # Proprietary license
+│   ├── test_basic.py             # Python import smoke tests
+│   └── test_business_rules.py    # Python unit tests for GLI business rules
+├── Cargo.toml                    # Rust crate manifest
+├── Cargo.lock                    # Rust dependency lockfile
+├── requirements.txt              # Python dependencies (notebooks/tests)
+├── .env.example                  # Template for environment variables
+├── .gitignore                    # Git ignore rules
+├── commodity_price_analyzer.json # Original Airia flow (preserved for reference)
+├── ARCHITECTURE.md               # Detailed architecture documentation
+├── CONTRACT_LOGIC.md             # Contract logic documentation
+├── DATA_SOURCES.md               # Data source documentation
+├── README.md                     # This file
+└── LICENSE                       # MIT license
 ```
+
+> Note: the Python tests under `tests/` reference a Python `src/` package that has
+> been superseded by the Rust crate. They are retained for historical reference
+> and require the legacy Python modules to run.
 
 ---
 
@@ -140,43 +138,37 @@ git clone https://codeberg.org/cubiczan/Commodity-Price-Analyzer.git
 cd Commodity-Price-Analyzer
 ```
 
-### 2. Install Dependencies
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys and Azure AI Foundry / Fabric credentials
+```
+
+### 3. Build and Test the Rust Core
+
+The analytics engine (price management, forecasting, signals, seasonal,
+supply/demand, and risk metrics) is a Rust crate:
+
+```bash
+# Build the crate
+cargo build --release
+
+# Run the Rust test suite
+cargo test
+```
+
+### 4. Python Notebooks and Dependencies
+
+The Microsoft Fabric notebooks and supporting Python tooling use the
+dependencies in `requirements.txt`:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-
-```bash
-cp .env.example .env
-# Edit .env with your Azure AI Foundry and Fabric credentials
-```
-
-### 4. Run the Pipeline
-
-```bash
-# Full pipeline with AI analysis
-python -m src
-
-# Quick natural-language query
-python -m src --quick "What is the current Ni/Co margin vs Offtaker?"
-
-# Skip AI analysis (testing)
-python -m src --skip-ai
-
-# Custom metals
-python -m src --metals nickel cobalt lithium copper
-
-# Save results to file
-python -m src --output results.json
-```
-
-### 5. Run Tests
-
-```bash
-python -m pytest tests/ -v
-```
+The Fabric notebooks under `notebooks/` are designed to run inside a Microsoft
+Fabric workspace (see "Microsoft Fabric Setup" below).
 
 ---
 
@@ -264,7 +256,7 @@ The Azure AI Foundry integration provides four analysis modes:
 
 ## License
 
-Proprietary — GLI Internal Use Only.
+MIT License. See [LICENSE](LICENSE).
 
 ---
 
