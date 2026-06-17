@@ -1,13 +1,13 @@
 {
   "apis": {
     "brave_search": {
-      "api_key": "REDACTED",
+      "api_key": "${BRAVE_SEARCH_API_KEY}",
       "base_url": "https://api.search.brave.com/res/v1",
       "rate_limit": 2000,
       "priority": 1
     },
     "tavily": {
-      "api_key": "REDACTED",
+      "api_key": "${TAVILY_API_KEY}",
       "base_url": "https://api.tavily.com",
       "rate_limit": 1000,
       "priority": 2,

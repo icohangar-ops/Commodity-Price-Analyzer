@@ -10,7 +10,9 @@ port = 993
 encryption.type = "tls"
 login = "zan@impactquadrant.info"
 auth.type = "password"
-auth.raw = "REDACTED"
+# Password is read from the environment, never hardcoded.
+# Set GMAIL_APP_PASSWORD (see .env.example) before running himalaya.
+auth.cmd = "printenv GMAIL_APP_PASSWORD"
 
 [accounts.impactquadrant.message.send.backend]
 type = "smtp"
@@ -19,7 +21,9 @@ port = 587
 encryption.type = "start-tls"
 login = "zan@impactquadrant.info"
 auth.type = "password"
-auth.raw = "REDACTED"
+# Password is read from the environment, never hardcoded.
+# Set GMAIL_APP_PASSWORD (see .env.example) before running himalaya.
+auth.cmd = "printenv GMAIL_APP_PASSWORD"
 
 [accounts.impactquadrant.folder.alias]
 sent = "[Gmail]/Sent Mail"

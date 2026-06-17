@@ -6,6 +6,7 @@ Includes Hunter.io for email verification and Zyte for scraping
 """
 
 import json
+import os
 import requests
 import time
 from typing import List, Dict, Optional
@@ -15,6 +16,25 @@ from pathlib import Path
 CONFIG_PATH = Path(__file__).parent / "config.json"
 with open(CONFIG_PATH) as f:
     CONFIG = json.load(f)
+
+
+def resolve_api_key(config_value: str) -> str:
+    """Resolve an API key, preferring environment variables.
+
+    Config files store ``${ENV_VAR}`` placeholders instead of real secrets.
+    If the configured value is such a placeholder, read the named variable
+    from the environment; otherwise treat the value as a literal.
+    """
+    if isinstance(config_value, str) and config_value.startswith("${") and config_value.endswith("}"):
+        env_name = config_value[2:-1]
+        value = os.environ.get(env_name)
+        if not value:
+            raise RuntimeError(
+                f"Missing environment variable {env_name} for API key. "
+                f"Set it (see .env.example) before running."
+            )
+        return value
+    return config_value
 
 
 class WebSearchClient:
@@ -49,7 +69,7 @@ class WebSearchClient:
     def _brave_search(self, query: str, count: int) -> List[Dict]:
         """Brave Search API call"""
         headers = {
-            "X-Subscription-Token": self.brave_config["api_key"],
+            "X-Subscription-Token": resolve_api_key(self.brave_config["api_key"]),
             "Accept": "application/json"
         }
         params = {
@@ -86,7 +106,7 @@ class WebSearchClient:
         """Tavily API fallback"""
         headers = {"Content-Type": "application/json"}
         payload = {
-            "api_key": self.tavily_config["api_key"],
+            "api_key": resolve_api_key(self.tavily_config["api_key"]),
             "query": query,
             "search_depth": "advanced",
             "max_results": count,
@@ -121,7 +141,7 @@ class EmailVerifier:
     
     def __init__(self):
         self.config = CONFIG["apis"]["hunter"]
-        self.api_key = self.config["api_key"]
+        self.api_key = resolve_api_key(self.config["api_key"])
     
     def verify(self, email: str) -> Dict:
         """
@@ -182,7 +202,7 @@ class WebScraper:
     
     def __init__(self):
         self.config = CONFIG["apis"]["zyte"]
-        self.api_key = self.config["api_key"]
+        self.api_key = resolve_api_key(self.config["api_key"])
     
     def scrape(self, url: str, extract_rules: Optional[Dict] = None) -> Dict:
         """
@@ -252,7 +272,7 @@ class CompanyEnrichment:
     
     def __init__(self):
         self.config = CONFIG["apis"]["abstract"]
-        self.api_key = self.config["api_key"]
+        self.api_key = resolve_api_key(self.config["api_key"])
     
     def enrich_by_domain(self, domain: str) -> Dict:
         """

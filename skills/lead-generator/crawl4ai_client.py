@@ -9,10 +9,14 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# Set Z AI API key for crawl4ai LLM extraction
-os.environ["ZAI_API_KEY"] = "REDACTED"
-os.environ["CRAWL4AI_LLM_PROVIDER"] = "zai"
-os.environ["CRAWL4AI_LLM_MODEL"] = "glm-4.7"
+# Z AI API key for crawl4ai LLM extraction is read from the environment.
+# Set CRAWL4AI_LLM_API_KEY (see .env.example) before running.
+if not os.environ.get("ZAI_API_KEY"):
+    _zai_key = os.environ.get("CRAWL4AI_LLM_API_KEY")
+    if _zai_key:
+        os.environ["ZAI_API_KEY"] = _zai_key
+os.environ.setdefault("CRAWL4AI_LLM_PROVIDER", "zai")
+os.environ.setdefault("CRAWL4AI_LLM_MODEL", "glm-4.7")
 
 # Import crawl4ai
 try:
