@@ -6,6 +6,18 @@ Format: `[Flow Version] — Date — Description`
 
 ---
 
+## [3.02] — 2026-10-07
+
+**AI steps moved from Claude Haiku 4.5 to Amazon Nova Lite on Bedrock**
+
+- Both AI Model steps now use one model record: Amazon Nova Lite, Bedrock model ID `us.amazon.nova-lite-v1:0`, endpoint `https://bedrock.us-east-1.amazonaws.com`, region `us-east-1`
+- Provider is `Bedrock`, source is `custom`, and the previous Claude library catalog id is cleared so import cannot reattach Haiku
+- Stage 1 temperature stays `0.2`. Reasoning effort is omitted because Nova Lite v1 has no extended-thinking control
+- Stage 2 temperature stays `0.7`
+- AWS credentials stay out of the export. Bind an Airia AWS Bedrock credential (us-east-1) after import. See [SETUP.md](./SETUP.md)
+
+---
+
 ## [3.00] — 2026-03-01
 
 **Initial public release (Preview state)**
