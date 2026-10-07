@@ -1,6 +1,6 @@
 # Architecture & Data Flow
 
-This document maps the exact Airia orchestration flow defined in `flows/commodity_analyzer.json`. Every step name, node type, connection, and configuration value below corresponds directly to a node in the flow.
+This document maps the exact Airia orchestration flow defined in `commodity_price_analyzer.json`. Every step name, node type, connection, and configuration value below corresponds directly to a node in the flow.
 
 ---
 
@@ -32,8 +32,8 @@ This document maps the exact Airia orchestration flow defined in `flows/commodit
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  STEP 3 — AI Model  (Stage 1: Price Fetch + Dispatch)                        │
 │  stepType: AIOperation  |  id: 622bf2c5-69de-4401-90c0-eef2ef9a6d82         │
-│  Model: Claude Haiku 4.5  (claude-haiku-4-5-20251001)                        │
-│  Temperature: 0.2  |  Reasoning Effort: high                                │
+│  Model: Amazon Nova Lite  (us.amazon.nova-lite-v1:0, Bedrock us-east-1)     │
+│  Temperature: 0.2  |  Reasoning Effort: none (Nova Lite v1 has no control)  │
 │  Include DateTime: ✅  |  Include User Details: ✅                           │
 │  Chat History: ✅  |  Attachments: ✅                                        │
 │                                                                              │
@@ -78,8 +78,8 @@ This document maps the exact Airia orchestration flow defined in `flows/commodit
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  STEP 5 — AI Model 1  (Stage 2: Financial Analyst Narrative)                 │
 │  stepType: AIOperation  |  id: 6748ea8d-664e-4b5a-8eda-3f3b01320dad         │
-│  Model: Claude Haiku 4.5  (claude-haiku-4-5-20251001)                        │
-│  Temperature: 0.7  |  Reasoning Effort: default                             │
+│  Model: Amazon Nova Lite  (us.amazon.nova-lite-v1:0, Bedrock us-east-1)     │
+│  Temperature: 0.7  |  Reasoning Effort: none (Nova Lite v1 has no control)  │
 │  Include DateTime: ❌  |  Include User Details: ❌                           │
 │  Chat History: ✅  |  Attachments: ✅                                        │
 │                                                                              │
@@ -141,12 +141,13 @@ This document maps the exact Airia orchestration flow defined in `flows/commodit
 |---|---|
 | ID | `622bf2c5-69de-4401-90c0-eef2ef9a6d82` |
 | Type | `AIOperation` |
-| Model | Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) |
-| Model ID | `988d449f-5ed2-4f52-8ebf-ee823714c3fe` |
+| Model | Amazon Nova Lite (`us.amazon.nova-lite-v1:0`) |
+| Provider | Bedrock, region `us-east-1`, endpoint `https://bedrock.us-east-1.amazonaws.com` |
+| Model record ID | `988d449f-5ed2-4f52-8ebf-ee823714c3fe` |
 | Prompt ID | `78001683-9a4a-49a5-9e4c-db48eeffb49c` |
 | Prompt Version | `77b9f75f-bbcb-4af5-868d-deceaa1caff5` |
 | Temperature | 0.2 (low — deterministic routing and data fetching) |
-| Reasoning Effort | High |
+| Reasoning Effort | Not set. Nova Lite v1 has no extended-thinking parameter, so this step does not send one. |
 | DateTime Context | Included |
 | User Details Context | Included |
 | Tools | AlphaVantage (`c3051a84`) + Regulations.Gov (`2f4a3e45`) |
@@ -175,12 +176,13 @@ Full code in [CONTRACT_LOGIC.md](./CONTRACT_LOGIC.md).
 |---|---|
 | ID | `6748ea8d-664e-4b5a-8eda-3f3b01320dad` |
 | Type | `AIOperation` |
-| Model | Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) |
-| Model ID | `988d449f-5ed2-4f52-8ebf-ee823714c3fe` |
+| Model | Amazon Nova Lite (`us.amazon.nova-lite-v1:0`) |
+| Provider | Bedrock, region `us-east-1`, endpoint `https://bedrock.us-east-1.amazonaws.com` |
+| Model record ID | `988d449f-5ed2-4f52-8ebf-ee823714c3fe` |
 | Prompt ID | `244d32ab-2f98-4e0e-adde-8163ad80f577` |
 | Prompt Version | `288a8e6a-8fb0-4e00-98f5-0c121ba445b5` |
 | Temperature | 0.7 (higher — narrative synthesis, explanatory language) |
-| Reasoning Effort | Default |
+| Reasoning Effort | Not set. Same Nova Lite v1 model as Stage 1. |
 | DateTime Context | Not included |
 | User Details Context | Not included |
 | Input | Python Code output |
@@ -229,11 +231,11 @@ Each run's AI Model 1 output is appended to the Historical Pricing Data memory s
 
 The two AI Model steps are deliberately configured at different temperatures:
 
-**AI Model (Stage 1) — temp 0.2, reasoning: high**
-Low temperature is correct here because this step is doing analytical work: parsing user intent, selecting MCP tools, fetching prices, and producing a structured JSON payload. Determinism and precision matter. High reasoning effort ensures the model carefully identifies which contracts and indices are in scope before committing to tool calls.
+**AI Model (Stage 1) — temp 0.2**
+Low temperature is correct here because this step is doing analytical work: parsing user intent, selecting MCP tools, fetching prices, and producing a structured JSON payload. Determinism and precision matter. Amazon Nova Lite v1 (`us.amazon.nova-lite-v1:0`) has no extended-thinking / reasoning-effort parameter, so the step does not set one. The system prompt and temperature 0.2 are what keep tool choice and the JSON payload stable. Nova Lite does support Bedrock Converse tool use, which is how AlphaVantage and Regulations.Gov stay attached to this step.
 
-**AI Model 1 (Stage 2) — temp 0.7, reasoning: default**
-Higher temperature is appropriate for the narrative synthesis step. The calculations are already locked in by the Python layer; the model's job is to explain them in natural, fluent business language. A slightly higher temperature produces more readable, less robotic prose without any risk to numerical accuracy.
+**AI Model 1 (Stage 2) — temp 0.7**
+Higher temperature is appropriate for the narrative synthesis step. The calculations are already locked in by the Python layer; the model's job is to explain them in natural, fluent business language. A slightly higher temperature produces more readable prose. Numerical accuracy stays with the Python step.
 
 ---
 

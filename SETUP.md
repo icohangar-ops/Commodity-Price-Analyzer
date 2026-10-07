@@ -19,16 +19,16 @@ This guide covers everything required to import and run the Commodity Price Anal
 
 1. Log into your Airia dashboard
 2. Navigate to **Agents → Import**
-3. Upload `flows/commodity_analyzer.json`
+3. Upload `commodity_price_analyzer.json` from the repository root
 4. The flow will be imported with the name **"Commodity Price Analyzer"** (agent ID `20013153-1e89-4496-adf7-27f2924ac70d`)
 
 After import, the following components will be present in your workspace:
 
 | Component | Name | Notes |
 |---|---|---|
-| AI Model step | `AI Model` | Claude Haiku 4.5, temp 0.2, reasoning: high |
+| AI Model step | `AI Model` | Amazon Nova Lite on Bedrock (`us.amazon.nova-lite-v1:0`, us-east-1), temp 0.2 |
 | Python step | `Python Code` | Business rules engine |
-| AI Model step | `AI Model 1` | Claude Haiku 4.5, temp 0.7 |
+| AI Model step | `AI Model 1` | Amazon Nova Lite on Bedrock (`us.amazon.nova-lite-v1:0`, us-east-1), temp 0.7 |
 | Memory | `OpCo Contract Parameters` | Shared, persistent — must be populated (Step 3) |
 | Memory | `Historical Pricing Data` | Shared, persistent — auto-populated on first run |
 | Tool | `Sector Information` | AlphaVantage — requires credential setup (Step 2) |
@@ -55,6 +55,16 @@ Credentials are stored in Airia's credential vault and are **never embedded in t
 2. Select type: **GovRegulationsApiKey**
 3. Enter your Regulations.Gov API key (obtainable free from [api.data.gov](https://api.data.gov/signup/))
 4. Save
+
+### Amazon Bedrock (Amazon Nova Lite)
+
+The AI steps call **Amazon Nova Lite** through Airia's Bedrock provider. Airia does not store AWS keys in the flow export (`credentialExportOption` is `Placeholder`), so each workspace attaches its own Bedrock credential after import.
+
+1. In AWS, confirm the cross-region inference profile `us.amazon.nova-lite-v1:0` is available in **us-east-1**. Amazon Nova is enabled on first use; it does not need the Anthropic use-case form.
+2. Create an IAM user or role that can call `bedrock:InvokeModel` and `bedrock:InvokeModelWithResponseStream` on both `arn:aws:bedrock:*::foundation-model/*` and `arn:aws:bedrock:*:*:inference-profile/*`. The inference-profile ARN is required because `us.amazon.nova-lite-v1:0` is a cross-region profile, not a foundation-model id.
+3. In Airia, go to **Settings → Credentials → Add Credential** (or **Models → Provide my own key**).
+4. Type: **AWS Bedrock**. Region: **us-east-1**. Use either an access key on that IAM user, or Role ARN assumption, as described in [Airia's Bedrock guide](https://airia.ai/docs/integrations/Tools/aws-bedrock).
+5. After the flow import (Step 4), bind this credential to the **Amazon Nova Lite** model.
 
 ---
 
@@ -103,11 +113,33 @@ Counterparty B FEEDSTOCK
 
 ---
 
-## Step 4 — Verify the Model Availability
+## Step 4 — Bind Amazon Nova Lite
 
-The flow uses **Claude Haiku 4.5** (`claude-haiku-4-5-20251001`, model ID `988d449f-5ed2-4f52-8ebf-ee823714c3fe`) for both AI Model steps.
+Both AI Model steps share one model record (`988d449f-5ed2-4f52-8ebf-ee823714c3fe`):
 
-Confirm this model is available in your Airia workspace under **Settings → Models**. If it is not available, contact your Airia administrator.
+| Field | Value |
+|---|---|
+| Display name | Amazon Nova Lite |
+| Model ID | `us.amazon.nova-lite-v1:0` |
+| Provider | Bedrock |
+| Endpoint | `https://bedrock.us-east-1.amazonaws.com` |
+| Region | `us-east-1` |
+| Source | Custom Bedrock model (no Airia library catalog id) |
+
+Airia supports Amazon Bedrock in the model library (**Models → filter by Provider Bedrock**) and as a custom model (provider **AWS Bedrock**, model ID = the Bedrock inference profile). The AI Gateway documents `us.amazon.nova-lite-v1:0` as a Bedrock model id and invokes it with the Converse API. This export uses that path and keeps the existing AI Model steps, including their prompts, temperatures, and MCP tools.
+
+The previous Claude Haiku library id is cleared on purpose. A published Airia catalog UUID for Nova Lite is not part of this export, so the model is marked `sourceType: custom` with `libraryModelId: null`. Import therefore cannot resolve the step back to Claude Haiku 4.5.
+
+After import:
+
+1. Open **Models** and select **Amazon Nova Lite**.
+2. Confirm the model ID is `us.amazon.nova-lite-v1:0`, the provider is **Bedrock**, and the endpoint is `https://bedrock.us-east-1.amazonaws.com`.
+3. Set credentials to **I have my own key** and select the us-east-1 Bedrock credential from Step 2.
+4. Open both **AI Model** and **AI Model 1** and confirm they still point at **Amazon Nova Lite**.
+
+If the importer drops the custom model, add it once from **Models → Custom Model** (provider AWS Bedrock, model ID `us.amazon.nova-lite-v1:0`, endpoint `https://bedrock.us-east-1.amazonaws.com`) and select it on both AI steps. If your tenant's model library already lists Amazon Nova Lite, you can select that library entry instead — the model ID must still be `us.amazon.nova-lite-v1:0`.
+
+Nova Lite v1 has no extended-thinking control. Stage 1 no longer sets a reasoning effort; temperature `0.2` is what keeps price fetching and JSON dispatch stable. Stage 2 stays at temperature `0.7` for the narrative.
 
 ---
 

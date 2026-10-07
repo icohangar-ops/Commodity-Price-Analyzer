@@ -161,7 +161,6 @@
           }
         ],
         "temperature": 0.2,
-        "reasoningEffort": "high",
         "includeDateTimeContext": true,
         "includeUserDetailsContext": true,
         "promptId": "78001683-9a4a-49a5-9e4c-db48eeffb49c",
@@ -431,16 +430,17 @@
   "models": [
     {
       "id": "988d449f-5ed2-4f52-8ebf-ee823714c3fe",
-      "displayName": "Claude Haiku 4.5",
-      "modelName": "claude-haiku-4-5-20251001",
+      "displayName": "Amazon Nova Lite",
+      "modelName": "us.amazon.nova-lite-v1:0",
       "promptId": null,
       "systemPromptDefinition": null,
       "inputType": "image",
-      "provider": "Anthropic",
-      "sourceType": "library",
-      "libraryModelId": "b5d8c3e7-f9a2-4e1b-8d6c-4a9f7e2b3d8c",
-      "author": "Anthropic",
-      "category": "Multimodal"
+      "provider": "Bedrock",
+      "sourceType": "custom",
+      "libraryModelId": null,
+      "author": "Amazon",
+      "category": "Multimodal",
+      "url": "https://bedrock.us-east-1.amazonaws.com"
     }
   ],
   "memories": [
